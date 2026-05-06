@@ -1,0 +1,6 @@
+# pip-compile --output-file=requirements/production.txt requirements/production.in
+
+requests
+pandas
+urllib3
+ytsaurus-client

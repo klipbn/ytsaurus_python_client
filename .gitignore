@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build
+build/
+dist/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+.vscode/
+
+**__pycache__**
+**.pyc
+**.coverage
+**.ipynb_checkpoints**
+**.vscode
+**.pytest_cache
+**.mypy_cache
+**.xs
+**/__tokens__/
+dags/*.json
+**.DS_Store
+__test_*
+.idea
+ IDEs
+.idea/*
+
+# Environments
+*.env
+.env
+.venv
+*.venv
+env/
+venv/
+dist/
+dist
+*dist/
+ENV/
+env.bak/
+venv.bak/
+
+# Data folders
+**/data/
+
+# Python temporary files
+*.pyc
+*.pyo
+build
+.vscode
+.DS_Store
+.pytest_cache/*
+.ci/docker-compose.yml
+
+# IPython
+profile_default/
+ipython_config.py
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+**__pypackages__/
+
+# Ruff stuff:
+.ruff_cache/
+
+# PyPI configuration file
+.pypirc
+
+# Other
+*.log
+*.komodoproject
+*.ropeproject
+package-lock.json
+*.map
+*_ts.d.ts
+.coverage
+\#*
+*~
+!.yarnrc
+!.npmrc
+!.gitlab-ci.yml
+!.gitlab-ci/*
+*.egg-info
+__pycache__
+**/__tokens__/
+tokens
+__tokens__

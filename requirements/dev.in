@@ -1,0 +1,6 @@
+# pip-compile --output-file=requirements/dev.txt requirements/dev.in
+
+-c production.txt
+
+black
+pip-tools
