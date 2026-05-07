@@ -29,6 +29,26 @@ pip install -e .
 - `numpy`
 - YTsaurus Python client with `yt.wrapper`
 
+## Configuration
+
+The library is configured through environment variables or explicit constructor arguments.
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `YT_PROXY` | YTsaurus proxy host | empty |
+| `YT_TOKEN_PATH` | Path to a local token file | `~/.yt/token` |
+| `YT_DEFAULT_TEMP_DIR` | Temp folder for large YQL result materialization | `//tmp/ytsaurus-python-client` |
+| `YT_POOL` | Optional YQL pool pragma | unset |
+| `YT_UI_BASE_URL` | Optional web UI base URL used only for printed links | unset |
+
+Example:
+
+```bash
+export YT_PROXY="your-ytsaurus-proxy.example.com"
+export YT_TOKEN_PATH="$HOME/.yt/token"
+export YT_DEFAULT_TEMP_DIR="//home/your-login/tmp"
+```
+
 ## Quick start
 
 ### Run a YQL query
@@ -49,6 +69,43 @@ SELECT
 
 print(df)
 ```
+
+### Upload a DataFrame to YTsaurus
+
+```python
+import pandas as pd
+
+from ytsaurus_python_client import YTsaurusHook
+
+hook = YTsaurusHook(yt_proxy="your-ytsaurus-proxy.example.com")
+
+df = pd.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"]})
+schema = hook.generate_yt_schema(df)
+
+hook.upload_df_to_yt(
+    df=df,
+    yt_path="//home/your-login/users",
+    schema=schema,
+    overwrite=True,
+)
+```
+
+## Public API
+
+```python
+from ytsaurus_python_client import (
+    YTsaurusHook,
+    DOYTHook,          # backward-compatible alias
+)
+```
+
+## Design notes
+
+- Defaults are intentionally generic and safe for public repositories
+- Secrets are never hardcoded. Use `YT_TOKEN`, `YT_TOKEN_PATH`, or explicit arguments
+- Printed YTsaurus UI links are optional and controlled by `YT_UI_BASE_URL`
+- YQL pragmas can be provided through `query_pragma_config` or environment variables such as `YT_POOL`
+- `DOYTHook` is kept as a backward-compatible alias; new code should prefer `YTsaurusHook`
 
 ## License
 
