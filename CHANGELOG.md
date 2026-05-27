@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-27
+
+### Added
+- `yql_unlim` function:
+  - Solves the YTsaurus limitation on exporting more than 10k rows
+  - Runs a YQL query and stores the result in a temporary table with a configurable name and TTL
+  - Loads the result into a Pandas DataFrame without a row limit
+
+### Changed
+- Updated documentation on data export methods, added descriptions of temporary table parameters
+
+---
+
 ## [0.1.0] - 2026-05-06
 
 ### Added

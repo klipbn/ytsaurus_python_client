@@ -8,6 +8,8 @@ A lightweight Python helper library for day-to-day work with YTsaurus - https://
 The project wraps common analytics workflows into a small, readable API:
 
 - run YQL queries and return results as `pandas.DataFrame`
+- read large query outputs through temporary YTsaurus tables
+- write YQL results directly into YTsaurus tables
 - upload pandas DataFrames into YTsaurus tables
 
 This repository is designed as a clean portfolio-friendly version of the client: no company-specific hosts, pools, paths, tokens, or internal links are hardcoded
@@ -68,6 +70,18 @@ SELECT
 """)
 
 print(df)
+```
+
+### Materialize a large YQL result into a temp table and read it in chunks
+
+```python
+df = hook.yql_unlim(
+    """
+    SELECT *
+    FROM `//home/your-login/large_table`;
+    """,
+    chunksize=500_000,
+)
 ```
 
 ### Upload a DataFrame to YTsaurus

@@ -318,6 +318,241 @@ class YTsaurusHook:
         else:
             pass
 
+    def _is_use_or_pragma_line(self, line: str) -> bool:
+        s = line.strip().lower()
+        return s.startswith("use ") or s.startswith("pragma ")
+
+    def _parse_header_lines(
+        self, lines: list[str]
+    ) -> tuple[Optional[str], dict[str, str]]:
+        """
+        Parse USE and PRAGMA lines into a cluster name and a pragma mapping.
+        """
+        use_cluster = None
+        pragmas: dict[str, str] = {}
+        for ln in lines:
+            s = ln.strip().rstrip(";")
+            if not s:
+                continue
+            low = s.lower()
+            if low.startswith("use "):
+                use_cluster = s.split(None, 1)[1].strip()
+            elif low.startswith("pragma "):
+                rest = s[7:].strip()
+                key = rest.split("=", 1)[0].split(None, 1)[0].strip().lower()
+                pragmas[key] = s + ";"
+        return use_cluster, pragmas
+
+    def _extract_use_and_pragmas(
+        self, text: str
+    ) -> tuple[str, Optional[str], dict[str, str]]:
+        """
+        Split query text into body SQL plus extracted USE/PRAGMA declarations.
+        """
+        header_lines, body_lines = [], []
+        for ln in text.splitlines():
+            if self._is_use_or_pragma_line(ln):
+                header_lines.append(ln)
+            else:
+                body_lines.append(ln)
+        use_cluster, pragmas = self._parse_header_lines(header_lines)
+        return "\n".join(body_lines).strip(), use_cluster, pragmas
+
+    def _system_pragmas_as_dict(self) -> tuple[str, dict[str, str]]:
+        """
+        Build default USE/PRAGMA declarations from hook configuration.
+        """
+        sys_use = self.yt_cluster_name
+        merged_cfg = {
+            **DEFAULT_YQL_QUERY_PRAGMA_CONFIG,
+            **(self.query_pragma_config or {}),
+        }
+        sys_pragmas: dict[str, str] = {}
+        for k, v in merged_cfg.items():
+            if isinstance(v, bool):
+                sys_pragmas[k.lower()] = f"PRAGMA {'Disable' if not v else ''}{k};"
+            else:
+                sys_pragmas[k.lower()] = f'PRAGMA {k} = "{v}";'
+        return sys_use, sys_pragmas
+
+    def _prepare_yql_header(
+        self, user_vars_header: list[str], user_body_header: list[str]
+    ) -> str:
+        """
+        Build a final YQL header with a single USE statement and de-duplicated pragmas.
+        """
+        sys_use, sys_pragmas = self._system_pragmas_as_dict()
+
+        uvars_use, uvars_pr = self._parse_header_lines(user_vars_header)
+        ubody_use, ubody_pr = self._parse_header_lines(user_body_header)
+
+        # USE: user_vars > user_body > system
+        final_use = uvars_use or ubody_use or sys_use
+        header_lines = [f"USE {final_use};"]
+
+        merged = dict(sys_pragmas)
+        merged.update(uvars_pr)
+        merged.update(ubody_pr)
+
+        header_lines.extend(merged.values())
+        return "\n".join(header_lines)
+
+    def _prepare_yql_insert_wrapped(
+        self, raw_query: str, out_table: str, expiration: str, overwrite: bool
+    ) -> str:
+        """
+        Wrap a final SELECT query into INSERT INTO while preserving variables and pragmas.
+        """
+        import re
+
+        if re.search(r"(?is)\binsert\s+into\b", raw_query):
+            return raw_query.strip()
+
+        vars_block = (extract_variables(raw_query) or "").strip()
+        body_block = (strip_variables(raw_query) or "").strip()
+
+        vars_clean, vars_use, vars_pragmas = self._extract_use_and_pragmas(vars_block)
+        body_clean, body_use, body_pragmas = self._extract_use_and_pragmas(body_block)
+
+        user_vars_header = []
+        if vars_use:
+            user_vars_header.append(f"USE {vars_use};")
+        user_vars_header.extend(vars_pragmas.values())
+
+        user_body_header = []
+        if body_use:
+            user_body_header.append(f"USE {body_use};")
+        user_body_header.extend(body_pragmas.values())
+
+        header = self._prepare_yql_header(user_vars_header, user_body_header)
+
+        flags = []
+        if overwrite:
+            flags.append("TRUNCATE")
+            if expiration:
+                flags.append(f'EXPIRATION="{expiration}"')
+        else:
+            if expiration:
+                print(
+                    "[YQL NOTICE] EXPIRATION is ignored when overwrite=False because YQL EXPIRATION works only with TRUNCATE."
+                )
+
+        if flags:
+            insert_line = f'INSERT INTO `{out_table}` WITH ({", ".join(flags)})'
+        else:
+            insert_line = f"INSERT INTO `{out_table}`"
+
+        body_clean_s = body_clean.strip()
+        if body_clean_s.endswith(";"):
+            body_clean_s = body_clean_s[:-1].rstrip()
+
+        vars_clean_s = vars_clean.strip()
+        if vars_clean_s and not vars_clean_s.endswith(";"):
+            vars_clean_s += ";"
+
+        return "\n".join(
+            p for p in [header, vars_clean_s, insert_line, body_clean_s] if p.strip()
+        )
+
+    def yql_unlim(
+        self,
+        query: str,
+        temp_table_path: str = None,
+        temp_table_expiration: str = "1d",
+        chunksize: int = 500_000,
+        overwrite: bool = True,
+    ) -> pd.DataFrame:
+        """
+        Run YQL through a temporary table and read a large result in chunks.
+
+        Solves the YTsaurus limit on exporting large query results: the final
+        SELECT is materialized into a temporary table and read back in chunks.
+        """
+        import json as _json
+
+        if not temp_table_path:
+            temp_table_path = self.create_temp_table()
+        print(
+            f"[YT TEMP TABLE] {self._navigation_url(temp_table_path)}"
+        )
+
+        select_matches = list(
+            re.finditer(r"(?im)^\s*select\b", query)
+        )
+        if not select_matches:
+            raise Exception("No SELECT statement found in the query.")
+        final_select_pos = select_matches[-1].start()
+
+        header_part = query[:final_select_pos].rstrip()
+        final_select_part = query[final_select_pos:].lstrip()
+
+        insert_wrapped_query = (
+            f"{header_part}\n\n"
+            f'INSERT INTO `{temp_table_path}` WITH (TRUNCATE, EXPIRATION="{temp_table_expiration}")\n'
+            f"{final_select_part}\n"
+        )
+
+        self.execute_internal(
+            insert_wrapped_query, lambda _: None, query_engine="yql"
+        )
+
+        it = self.get_table(
+            temp_table_path,
+            format=JsonFormat(encode_utf8=False, enable_ujson=True),
+            raw=True,
+        )
+
+        def iter_rows_json_ljson(iterator):
+            buf = b""
+            for chunk in iterator:
+                if isinstance(chunk, (bytes, bytearray)):
+                    buf += chunk
+                else:
+                    buf += str(chunk).encode("utf-8", "ignore")
+                parts = buf.split(b"\n")
+                buf = parts[-1]
+                for bline in parts[:-1]:
+                    if not bline:
+                        continue
+                    line = bline.rstrip(b"\r").decode("utf-8", "ignore")
+                    yield _json.loads(line)
+
+            tail = buf.rstrip(b"\r\n")
+            if tail:
+                yield _json.loads(tail.decode("utf-8", "ignore"))
+
+        def read_chunks(iterator, size):
+            while True:
+                chunk = list(_it.islice(iterator, size))
+                if not chunk:
+                    break
+                yield pd.DataFrame.from_records(chunk)
+
+        chunks = list(read_chunks(iter_rows_json_ljson(it), chunksize))
+        return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
+
+    def yql_into_table(
+        self, query: str, out_table: str, overwrite: bool = True, expiration: str = "7d"
+    ) -> str:
+        """
+        Run a YQL query and write its result directly into the target YTsaurus table.
+        """
+        if overwrite and self.client.exists(out_table):
+            try:
+                self.client.remove(out_table, force=True)
+            except Exception:
+                pass
+
+        insert_query = self._prepare_yql_insert_wrapped(
+            raw_query=query,
+            out_table=out_table,
+            expiration=expiration,
+            overwrite=overwrite,
+        )
+
+        self.execute_internal(insert_query, lambda _: None, query_engine="yql")
+        return out_table
+    
 
 # Backward-compatible alias for legacy usage.
 DOYTHook = YTsaurusHook
