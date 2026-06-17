@@ -6,6 +6,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-17
+
+### Added
+- Progress bar for reading results:
+  - A single progress line without console spam: `rows`, `bytes≈`, `%`, `speed`, `elapsed`
+  - `yql_unlim` additionally prints expected table metrics (when available): `expected rows≈…`, `expected bytes≈…`
+- Helpers:
+  - `_get_table_stats(path)` — safe reading of `@row_count`, `@uncompressed_data_size`, `@compressed_data_size`, `@chunk_count` with type coercion
+  - `_progress_printer(...)` — unified progress output format
+  - `_sanitize_json_line(...)` — a utility for gentle cleanup of "dirty" JSON lines (NaN/Infinity/trailing commas); used inside the streaming parser
+
+### Changed
+- `yql`:
+  - Simplified reader: reads only `JSON (raw=True)` with incremental LJSON parsing by `\n`
+  - No longer **raises exceptions** and no longer **prints tracebacks** — on error it prints a readable message and returns an empty `DataFrame`
+  - Clear JSON error messages and `NaN/Infinity` hints on how to rewrite the query
+- `yql_unlim`:
+  - Wrapping the final `SELECT` into `INSERT INTO <temp_table> WITH (TRUNCATE, EXPIRATION="…")` — as before, but the reader is now only `JSON (raw=True)` with chunking, progress and "quiet" behavior on errors (empty `DataFrame`)
+  - The final-select detector became more robust: `^\s*select\b` (matches `SELECT*`, `SELECT\t`, `SELECT\n`, etc.)
+  - When no final `SELECT` is present, the function does not crash but prints `[YQL ERROR]` and returns an empty `DataFrame`
+- Logs:
+  - All service messages unified to a consistent style (`[YT TEMP TABLE]`, `[YT META]`, `[YQL JSON ERROR]`, `[YQL ERROR]`)
+
+### Removed
+- Query-result reading fallbacks:
+  - Removed the `JSON(raw=True) → JSON(raw=False) → YSON` transitions and the retries through a temp table inside `yql`
+  - No more dependency on YSON bindings when reading results (eliminates errors like `YSON bindings required`)
+- Traceback printing on export errors — now only short human-readable messages
+
+### Notes / Breaking changes
+- `yql` and `yql_unlim` **return an empty `DataFrame`** on errors and print a readable message (no exceptions)
+- If the query result contains `NaN/Infinity/-Infinity`, the YTsaurus server does not return valid JSON.
+  Such values must be **cleaned** in the YQL itself, for example:
+  ```sql
+  CASE WHEN denom = 0 OR denom IS NULL THEN NULL ELSE num/denom END AS metric
+  -- or
+  num / NULLIF(denom, 0) AS metric
+  -- or (if available)
+  CASE WHEN isnan(metric) THEN NULL ELSE metric END AS metric
+  ```
+- For `yql_unlim` to work correctly, the final `SELECT` must be present explicitly (detected by `^\s*select\b`)
+
+---
+
 ## [0.2.0] - 2026-05-27
 
 ### Added
