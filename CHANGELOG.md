@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-01
+
+### Added
+- **CHYT** support over HTTP:
+- `chyt_raw(sql)` — runs raw queries (`CREATE`, `INSERT`, `DROP`)
+
+### Changed
+- New functions `hook.yql` and `hook.yql_unlim` replaced the old `hook.run_yql_to_df` and `hook.run_yql_to_df_unlimited` for naming consistency
+- New functions `chyt_df`, `chyt_to_yt`, `chyt_raw` replaced the old `query_chyt_to_df`, `upload_df_to_chyt`, `query_chyt_raw`
+- Improved network error handling (auto-retry, fallback to `/api/v4/chyt`)
+
+### Fixed
+- Fixed the `Sort order violation` error when uploading string keys — sorting is now performed automatically
+
+---
+
 ## [0.3.0] - 2026-06-17
 
 ### Added

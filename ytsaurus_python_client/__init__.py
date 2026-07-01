@@ -1,6 +1,7 @@
 """Public API for ytsaurus-python-client"""
 
 from .hook import DOYTHook, YTsaurusHook
+from .chyt import chyt_df, chyt_raw, chyt_to_yt
 from .utils import extract_variables, strip_variables
 from .config import (
     YT_DEFAULT_PROXY,
@@ -8,6 +9,10 @@ from .config import (
     YT_DEFAULT_TEMP_DIR,
     YT_TOKEN_PATH,
     YT_UI_BASE_URL,
+    CHYT_HOST,
+    CHYT_PORT,
+    CHYT_URL,
+    CHYT_CLIQUE_ALIAS,
     DEFAULT_YQL_QUERY_PRAGMA_CONFIG,
 )
 from .exceptions import (
@@ -21,6 +26,9 @@ from .exceptions import (
 __all__ = [
     "YTsaurusHook",
     "DOYTHook",
+    "chyt_df",
+    "chyt_raw",
+    "chyt_to_yt",
     "extract_variables",
     "strip_variables",
     "YT_DEFAULT_PROXY",
@@ -28,6 +36,10 @@ __all__ = [
     "YT_DEFAULT_TEMP_DIR",
     "YT_TOKEN_PATH",
     "YT_UI_BASE_URL",
+    "CHYT_HOST",
+    "CHYT_PORT",
+    "CHYT_URL",
+    "CHYT_CLIQUE_ALIAS",
     "DEFAULT_YQL_QUERY_PRAGMA_CONFIG",
     "YQLTimeoutException",
     "YQLFailedException",
