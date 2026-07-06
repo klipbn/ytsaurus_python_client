@@ -17,6 +17,9 @@ from .config import CHYT_CLIQUE_ALIAS, CHYT_HOST, CHYT_PORT, YT_TOKEN_PATH
 
 
 def _get_token(token_path: str | Path = YT_TOKEN_PATH) -> str:
+    token = os.getenv("YT_TOKEN")
+    if token:
+        return token
     return Path(token_path).expanduser().read_text().strip()
 
 

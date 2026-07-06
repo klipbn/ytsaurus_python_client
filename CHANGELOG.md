@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-06
+
+### Added
+- Package installation via `setup.py` with declared dependencies
+- `YT_TOKEN` is now read not only from the token file but also from the environment variable (when set)
+
+---
+
 ## [0.4.0] - 2026-07-01
 
 ### Added
