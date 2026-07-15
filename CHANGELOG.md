@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-07-15
+
+### Added
+- New `wait` parameter in `YTsaurusHook.execute_internal` and `YTsaurusHook.yql` that allows starting YQL queries without waiting for completion
+- With `wait=False`, `YTsaurusHook.yql` returns the `query_id` instead of a `pandas.DataFrame`, which is convenient for long-running tasks with subsequent monitoring through the UI
+
+### Changed
+- Default behavior is unchanged: with `wait=True` (default), `yql` still waits for completion and returns a `DataFrame`
+
+---
+
 ## [0.4.1] - 2026-07-06
 
 ### Added

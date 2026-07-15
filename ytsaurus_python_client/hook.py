@@ -496,6 +496,8 @@ class YTsaurusHook:
         query: str,
         get_func: Callable[[str], Any],
         query_engine: Optional[str] = None,
+        *,
+        wait: bool = True,
     ) -> Any:
         query_engine = query_engine or self.query_engine
         print(f"Executing query via {query_engine.upper()}")
@@ -503,6 +505,9 @@ class YTsaurusHook:
         print(
             f"Started query id={query_id} -> {self._query_url(query_id)}"
         )
+
+        if not wait:
+            return query_id
 
         start_time = time()
         while True:
@@ -526,9 +531,12 @@ class YTsaurusHook:
     def yql(
         self,
         query: str,
+        wait: bool = True,
     ) -> Union[pd.DataFrame, str]:
         """
-        Run a YQL query and return the result as a pandas DataFrame.
+        Run a YQL query and optionally return the result as a pandas DataFrame.
+
+        Use wait=False to start a long-running query and return its query ID immediately.
         """
 
         def get_output(query_id: str) -> Any:
@@ -642,9 +650,17 @@ class YTsaurusHook:
 
         query_str = self._prepare_query(query) if self.query_engine == "yql" else query
 
+        if not wait:
+            return self.execute_internal(
+                query_str,
+                lambda _: None,
+                wait=False,
+            )
+
         return self.execute_internal(
             query_str,
             get_output,
+            wait=True,
         )
 
 

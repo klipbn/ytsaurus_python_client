@@ -111,6 +111,21 @@ SELECT
 print(df)
 ```
 
+### Start a long-running query and return the query ID
+
+```python
+query_id = hook.yql(
+    """
+    INSERT INTO `//home/your-login/output_table`
+    SELECT *
+    FROM `//home/your-login/source_table`;
+    """,
+    wait=False,
+)
+
+print(query_id)
+```
+
 ### Materialize a large YQL result into a temp table and read it in chunks
 
 ```python
