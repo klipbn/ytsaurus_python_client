@@ -2,6 +2,7 @@
 
 from .hook import DOYTHook, YTsaurusHook
 from .chyt import chyt_df, chyt_raw, chyt_to_yt
+from .chyt_cli import chyt_check_cli, chyt_df_cli, chyt_raw_cli, chyt_to_yt_cli, _run_yt_cli
 from .utils import extract_variables, strip_variables
 from .config import (
     YT_DEFAULT_PROXY,
@@ -29,6 +30,11 @@ __all__ = [
     "chyt_df",
     "chyt_raw",
     "chyt_to_yt",
+    "chyt_check_cli",
+    "chyt_df_cli",
+    "chyt_raw_cli",
+    "chyt_to_yt_cli",
+    "_run_yt_cli",
     "extract_variables",
     "strip_variables",
     "YT_DEFAULT_PROXY",

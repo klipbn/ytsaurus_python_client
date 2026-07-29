@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-07-29
+
+### Added
+- CLI implementation of the CHYT client via `yt clickhouse execute`:
+  - `chyt_df_cli(sql)` — run a SELECT in CHYT and return the result as a `pandas.DataFrame`
+  - `chyt_raw_cli(sql)` — run raw CHYT queries without reading into a DataFrame
+  - `chyt_to_yt_cli(df, path)` — upload a `pandas.DataFrame` into a YTsaurus table via `yt write-table`
+  - `_run_yt_cli(...)` — low-level helper for running `yt` CLI commands
+- `read_result=False` mode in `YTsaurusHook.yql`:
+  - the query is started
+  - execution waits for the `completed` state
+  - the result is not loaded into a `DataFrame`
+- Support for explicitly passing `yt_token` to `yt.wrapper.YtClient` via the client config
+
+### Changed
+- `YTsaurusHook.yql` now supports three modes:
+  - `wait=True, read_result=True` — standard SELECT returning a `DataFrame`
+  - `wait=False` — only start the query and return the `query_id` immediately
+  - `wait=True, read_result=False` — wait for completion without reading the result
+- YT Query UI links no longer hardcode the cluster name; `self.yt_cluster_name` is used instead
+- Simplified the default `DEFAULT_YQL_QUERY_PRAGMA_CONFIG`: only the necessary parameters are kept
+
+### Fixed
+- Fixed timeouts/instability of the old HTTP CHYT endpoint by adding an alternative CLI-based path
+- Fixed the `Do not specify FORMAT clause in query; use format keyword instead` error when running CHYT queries through the CLI
+- Fixed `INSERT INTO ... FORMAT ...` in CHYT CLI: DataFrame upload is now performed via `yt write-table`
+- Fixed issues with legacy YTsaurus table schemas on overwrite: the table can be dropped before recreation for a correct overwrite
+- Fixed `yt_token` handling: a token passed to `YTsaurusHook(yt_token=...)` is now actually used when creating the client
+- Improved error messages when reading YQL JSON results, including hints for `NaN`, `Infinity` and malformed JSON cases
+
+---
+
 ## [0.4.2] - 2026-07-15
 
 ### Added

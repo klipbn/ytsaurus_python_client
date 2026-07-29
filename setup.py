@@ -25,7 +25,7 @@ def read_requirements(name: str):
 
 setup(
     name="yt-da-client",
-    version="0.4.2",
+    version="0.4.3",
     packages=find_packages(),
     package_data={
         "": ["yt_da_client_example.ipynb"],

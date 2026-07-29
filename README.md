@@ -126,6 +126,17 @@ query_id = hook.yql(
 print(query_id)
 ```
 
+### Execute a query and wait without reading the result
+
+```python
+query_id = hook.yql_wait("""
+CREATE TABLE `//home/your-login/example_table` (
+    id Int64,
+    value String
+);
+""")
+```
+
 ### Materialize a large YQL result into a temp table and read it in chunks
 
 ```python
@@ -172,6 +183,18 @@ df = chyt_df(
 )
 ```
 
+### Run a CHYT query through the YTsaurus CLI
+
+```python
+from ytsaurus_python_client import chyt_df_cli
+
+df = chyt_df_cli(
+    "SELECT 1 AS ok",
+    yt_proxy="your-ytsaurus-proxy.example.com",
+    clique_alias="ch_public",
+)
+```
+
 ## Public API
 
 ```python
@@ -181,6 +204,10 @@ from ytsaurus_python_client import (
     chyt_df,
     chyt_raw,
     chyt_to_yt,
+    chyt_df_cli,
+    chyt_raw_cli,
+    chyt_to_yt_cli,
+    chyt_check_cli,
 )
 ```
 
