@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-08-12
+
+### Added
+- `query_access_control_objects` parameter in `YTsaurusHook.__init__` — propagated to `execute_internal`, `yql`, `yql_wait`, `yql_unlim` and `yql_into_table`
+- Static method `_extract_cluster_name(proxy)` for correct cluster name extraction (handles segments with the `-yt` suffix)
+- Tests `test_extract_cluster_name.py`
+
+### Changed
+- Updated `ytsaurus-client` from `0.13.8` to `0.13.50`
+- The `access_control_objects` parameter can now be passed to `execute_internal`, `yql`, `yql_wait`, `yql_unlim`, `yql_into_table`
+
+### Fixed
+- Removed the hardcoded cluster name in YT navigation links — the dynamic `yt_cluster_name` is used instead
+
+---
+
 ## [0.4.3] - 2026-07-29
 
 ### Added

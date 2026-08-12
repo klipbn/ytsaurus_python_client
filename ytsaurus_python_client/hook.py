@@ -76,6 +76,7 @@ class YTsaurusHook:
         client_config: Optional[Dict[str, Any]] = None,
         yt_query_result_temp_dir: str = YT_DEFAULT_TEMP_DIR,
         yt_ui_base_url: Optional[str] = None,
+        query_access_control_objects: Optional[List[str]] = None,
         *args,
         **kwargs,
     ) -> None:
@@ -83,14 +84,29 @@ class YTsaurusHook:
         self.yt_proxy = yt_proxy or YT_DEFAULT_PROXY
         self.yt_token = yt_token
         self.yt_query_result_temp_dir = yt_query_result_temp_dir
-        self.yt_cluster_name = yt_cluster_name or (self.yt_proxy.split(".")[0] if self.yt_proxy else "")
+        self.yt_cluster_name = yt_cluster_name or self._extract_cluster_name(self.yt_proxy)
         self.yt_ui_base_url = yt_ui_base_url if yt_ui_base_url is not None else YT_UI_BASE_URL
         self.query_engine = query_engine
         self.query_duration_timeout = query_duration_timeout
         self.query_output_table = query_output_table
         self.query_pragma_config = query_pragma_config or {}
         self.client_config = client_config or {}
+        self.query_access_control_objects = query_access_control_objects or []
         self.client = self.get_client()
+
+    @staticmethod
+    def _extract_cluster_name(proxy: str) -> str:
+        """
+        Extract the YTsaurus cluster name from a proxy host.
+
+        Handles HTTP-proxy hosts like ``42.http-proxy.hahn-yt.example.com``
+        where the cluster name is the segment with the ``-yt`` suffix.
+        Falls back to the first host segment.
+        """
+        for segment in proxy.split("."):
+            if segment.endswith("-yt"):
+                return segment[:-3]
+        return proxy.split(".")[0]
 
     # ===== helpers =====
     def _get_table_stats(self, table_path: str) -> dict:
@@ -498,10 +514,23 @@ class YTsaurusHook:
         query_engine: Optional[str] = None,
         *,
         wait: bool = True,
+        access_control_objects: Optional[List[str]] = None,
     ) -> Any:
         query_engine = query_engine or self.query_engine
+
+        query_access_control_objects = (
+            access_control_objects
+            if access_control_objects is not None
+            else self.query_access_control_objects
+        )
+
         print(f"Executing query via {query_engine.upper()}")
-        query_id = self.client.start_query(query_engine, query)
+
+        start_query_kwargs = {}
+        if query_access_control_objects:
+            start_query_kwargs["access_control_objects"] = query_access_control_objects
+
+        query_id = self.client.start_query(query_engine, query, **start_query_kwargs)
         print(
             f"Started query id={query_id} -> {self._query_url(query_id)}"
         )
@@ -533,12 +562,15 @@ class YTsaurusHook:
         query: str,
         wait: bool = True,
         read_result: bool = True,
+        access_control_objects: Optional[List[str]] = None,
     ) -> Union[pd.DataFrame, str]:
         """
         Run a YQL query and optionally return the result as a pandas DataFrame.
 
         Use wait=False to start a long-running query and return its query ID immediately.
         Use read_result=False for DDL/DML queries where a DataFrame result is not needed.
+
+        :param access_control_objects: Access control objects for the YTsaurus query.
         """
 
         def get_output(query_id: str) -> Any:
@@ -664,6 +696,7 @@ class YTsaurusHook:
                 query_str,
                 lambda _: None,
                 wait=False,
+                access_control_objects=access_control_objects,
             )
 
         if not read_result:
@@ -671,27 +704,33 @@ class YTsaurusHook:
                 query_str,
                 get_query_id_only,
                 wait=True,
+                access_control_objects=access_control_objects,
             )
 
         return self.execute_internal(
             query_str,
             get_output,
             wait=True,
+            access_control_objects=access_control_objects,
         )
 
 
     def yql_wait(
         self,
         query: str,
+        access_control_objects: Optional[List[str]] = None,
     ) -> str:
         """
         Run a YQL query, wait for completion, and return the query ID without reading rows.
+
+        :param access_control_objects: Access control objects for the YTsaurus query.
         """
 
         return self.yql(
             query=query,
             wait=True,
             read_result=False,
+            access_control_objects=access_control_objects,
         )
 
 
@@ -922,11 +961,14 @@ class YTsaurusHook:
         show_progress: bool = True,
         report_every_rows: int = 200_000,
         report_every_sec: float = 1.5,
+        access_control_objects: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """
         Run YQL through a temporary table and read a large result in chunks.
 
         This is useful when direct query-result reading is too memory-intensive or unstable.
+
+        :param access_control_objects: Access control objects for the YTsaurus query.
         """
         import json as _json
         from json import JSONDecodeError
@@ -959,7 +1001,8 @@ class YTsaurusHook:
             )
 
             self.execute_internal(
-                insert_wrapped_query, lambda _: None, query_engine="yql"
+                insert_wrapped_query, lambda _: None, query_engine="yql",
+                access_control_objects=access_control_objects,
             )
 
             total_rows = total_bytes = None
@@ -1083,10 +1126,13 @@ class YTsaurusHook:
             return pd.DataFrame()
 
     def yql_into_table(
-        self, query: str, out_table: str, overwrite: bool = True, expiration: str = "7d"
+        self, query: str, out_table: str, overwrite: bool = True, expiration: str = "7d",
+        access_control_objects: Optional[List[str]] = None,
     ) -> str:
         """
         Run a YQL query and write its result directly into the target YTsaurus table.
+
+        :param access_control_objects: Access control objects for the YTsaurus query.
         """
         if overwrite and self.client.exists(out_table):
             try:
@@ -1101,7 +1147,8 @@ class YTsaurusHook:
             overwrite=overwrite,
         )
 
-        self.execute_internal(insert_query, lambda _: None, query_engine="yql")
+        self.execute_internal(insert_query, lambda _: None, query_engine="yql",
+                              access_control_objects=access_control_objects)
         return out_table
     
 
