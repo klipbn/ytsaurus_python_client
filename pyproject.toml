@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ytsaurus-python-client"
-version = "0.4.4"
+version = "0.4.5"
 description = "Lightweight Python helpers for YTsaurus, YQL, CHYT, and pandas workflows."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -29,9 +29,9 @@ classifiers = [
 dependencies = [
   "numpy>=1.24",
   "pandas>=2.0",
-  "requests>=2.31",
-  "urllib3>=1.26",
-  "ytsaurus-client>=0.13",
+  "requests>=2.32.0",
+  "urllib3>=2.6.3",
+  "ytsaurus-client>=0.13.50",
 ]
 
 [project.optional-dependencies]

@@ -4,74 +4,43 @@
 #
 #    pip-compile --output-file=requirements/production.txt requirements/production.in
 #
-argcomplete==2.0.0
-    # via
-    #   -c requirements/requirements.txt
-    #   ytsaurus-client
+argcomplete==3.5.1
+    # via ytsaurus-client
 certifi==2025.10.5
+    # via requests
+charset-normalizer==3.4.0
     # via
-    #   -c requirements/requirements.txt
-    #   requests
-charset-normalizer==2.0.10
-    # via
-    #   -c requirements/requirements.txt
     #   requests
     #   ytsaurus-client
 decorator==4.4.2
-    # via
-    #   -c requirements/requirements.txt
-    #   ytsaurus-client
+    # via ytsaurus-client
 idna==3.11
-    # via
-    #   -c requirements/requirements.txt
-    #   requests
+    # via requests
 numpy==2.3.4
-    # via
-    #   -c requirements/requirements.txt
-    #   pandas
+    # via pandas
 pandas==2.3.3
-    # via
-    #   -c requirements/requirements.txt
-    #   -r requirements/production.in
+    # via -r requirements/production.in
 python-dateutil==2.9.0.post0
-    # via
-    #   -c requirements/requirements.txt
-    #   pandas
+    # via pandas
 pytz==2025.2
+    # via pandas
+requests==2.32.5
+    # via -r requirements/production.in
+simplejson==3.20.1
+    # via ytsaurus-client
+six==1.17.0
     # via
-    #   -c requirements/requirements.txt
-    #   pandas
-requests==2.26.0
-    # via
-    #   -c requirements/requirements.txt
-    #   -r requirements/production.in
-simplejson==3.18.3
-    # via
-    #   -c requirements/requirements.txt
-    #   ytsaurus-client
-six==1.16.0
-    # via
-    #   -c requirements/requirements.txt
     #   python-dateutil
     #   ytsaurus-client
-tqdm==4.64.1
-    # via
-    #   -c requirements/requirements.txt
-    #   ytsaurus-client
-typing-extensions==4.5.0
-    # via
-    #   -c requirements/requirements.txt
-    #   ytsaurus-client
+tqdm==4.67.1
+    # via ytsaurus-client
+typing-extensions==4.15.0
+    # via ytsaurus-client
 tzdata==2025.2
+    # via pandas
+urllib3==2.6.3
     # via
-    #   -c requirements/requirements.txt
-    #   pandas
-urllib3==1.26.7
-    # via
-    #   -c requirements/requirements.txt
     #   -r requirements/production.in
     #   requests
-ytsaurus-client==0.13.8
-    # via
-    #   -c requirements/requirements.txt
-    #   -r requirements/production.in
+ytsaurus-client==0.13.50
+    # via -r requirements/production.in

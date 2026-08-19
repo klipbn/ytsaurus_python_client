@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-08-19
+
+### Fixed
+- Fixed dependency conflicts: removed the outdated constraint file, updated package versions (`simplejson>=3.20.1`, `typing-extensions>=4.5.0`, `urllib3>=2.6.3`, `requests>=2.32.0`) for compatibility with `ytsaurus-client>=0.13.50`
+
+---
+
 ## [0.4.4] - 2026-08-12
 
 ### Added
