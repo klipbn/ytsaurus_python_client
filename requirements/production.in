@@ -1,6 +1,6 @@
 # pip-compile --output-file=requirements/production.txt requirements/production.in
 
 requests>=2.32.0
-pandas
+pandas==2.3.3
 urllib3>=2.6.3
 ytsaurus-client>=0.13.50

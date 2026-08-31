@@ -137,6 +137,22 @@ CREATE TABLE `//home/your-login/example_table` (
 """)
 ```
 
+### Control query result access
+
+All YQL methods accept an `access_control_objects` parameter (YT subjects: `everyone-read`, `everyone-use`, `everyone`, `nobody`). A default value can also be set for the whole hook via `query_access_control_objects`:
+
+```python
+hook = YTsaurusHook(
+    yt_proxy="your-ytsaurus-proxy.example.com",
+    query_access_control_objects=["everyone-read"],
+)
+
+df = hook.yql(
+    "SELECT * FROM `//home/your-login/table`",
+    access_control_objects=["everyone-read"],
+)
+```
+
 ### Materialize a large YQL result into a temp table and read it in chunks
 
 ```python

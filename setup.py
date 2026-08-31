@@ -25,7 +25,7 @@ def read_requirements(name: str):
 
 setup(
     name="ytsaurus-python-client",
-    version="0.4.5",
+    version="0.5.0",
     packages=find_packages(include=["ytsaurus_python_client*"]),
     package_data={
         "": ["ytsaurus_python_client_example.ipynb"],

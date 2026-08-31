@@ -571,6 +571,13 @@ class YTsaurusHook:
         Use read_result=False for DDL/DML queries where a DataFrame result is not needed.
 
         :param access_control_objects: Access control objects for the YTsaurus query.
+            Possible values (YT subjects):
+            - ``"everyone-read"`` — everyone can read the query result
+            - ``"everyone-use"`` — everyone can use the query result
+            - ``"everyone"`` — full access for everyone
+            - ``"nobody"`` — owner-only access (default)
+            Example:
+                hook.yql("SELECT ...", access_control_objects=["everyone-read"])
         """
 
         def get_output(query_id: str) -> Any:
@@ -724,6 +731,8 @@ class YTsaurusHook:
         Run a YQL query, wait for completion, and return the query ID without reading rows.
 
         :param access_control_objects: Access control objects for the YTsaurus query.
+            Example:
+                hook.yql_wait("INSERT INTO ...", access_control_objects=["everyone-read"])
         """
 
         return self.yql(
@@ -969,6 +978,13 @@ class YTsaurusHook:
         This is useful when direct query-result reading is too memory-intensive or unstable.
 
         :param access_control_objects: Access control objects for the YTsaurus query.
+            Possible values (YT subjects):
+            - ``"everyone-read"`` — everyone can read the query result
+            - ``"everyone-use"`` — everyone can use the query result
+            - ``"everyone"`` — full access for everyone
+            - ``"nobody"`` — owner-only access (default)
+            Example:
+                hook.yql_unlim("SELECT ...", access_control_objects=["everyone-read"])
         """
         import json as _json
         from json import JSONDecodeError

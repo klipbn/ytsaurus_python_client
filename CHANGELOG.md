@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-31
+
+### Added
+- Usage examples for `everyone-read`, `everyone-use`, `everyone`, `nobody` in the `access_control_objects` docstrings of `yql` and `yql_unlim`
+
+### Changed
+- Pinned `pandas==2.3.3` (rolled back from `3.0.3` for compatibility)
+- Major version bump of the library to `0.5.0`
+
+---
+
 ## [0.4.5] - 2026-08-19
 
 ### Fixed
